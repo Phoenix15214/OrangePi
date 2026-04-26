@@ -143,8 +143,12 @@ def main(shm_name, frame_ready, conn=None):
         if valid_targets:
             valid_targets = sorted(valid_targets, key=lambda x: x[0])
             for i in valid_targets:
-                pack.insert_two_bytes(pack.num_to_bytes(i[1]))if pack is not None else None
-                msg[send_index] = i[1]
+                if pack is not None:
+                    if i[1] == 100:  # 无效目标
+                        pack.insert_two_bytes(pack.num_to_bytes(0)) # 发送 0 表示无目标
+                    else:
+                        pack.insert_two_bytes(pack.num_to_bytes(i[1] + 1))
+                msg[send_index] = i[1] + 1 if i[1] != 100 else 0
                 send_index += 1
         
         conn.send(msg) if conn is not None else None

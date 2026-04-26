@@ -38,18 +38,18 @@ def _send_thread(conn, method, socket):
     global message
     while True:
         msg = conn.recv()
-        if msg[0] == 0:
-            message[0] = msg[1]
-            message[1] = msg[2]
-            message[2] = msg[3]
-            message[3] = msg[4]
-            message[4] = msg[5]
-            message[5] = msg[6]
-        elif msg[0] == 1:
-            message[6] = msg[1]
-            message[7] = msg[2]
-            message[8] = msg[3]
-            message[9] = msg[4]
+        if msg[0] == 0: # 来自track.py的消息
+            message[0] = msg[1] # 循迹偏离角度
+            message[1] = msg[2] # 循迹线偏离中心x坐标
+            message[2] = msg[3] # 路口x坐标
+            message[3] = msg[4] # 路口y坐标
+            message[8] = msg[5] # 终点x坐标
+            message[9] = msg[6] # 终点y坐标
+        elif msg[0] == 1: # 来自detect.py的消息
+            message[4] = msg[1] # 四个目标的类别ID
+            message[5] = msg[2]
+            message[6] = msg[3]
+            message[7] = msg[4]
         pack.insert_byte(0x14)  # 包头
         for i in range(10):
             pack.insert_two_bytes(pack.num_to_bytes(message[i]))
@@ -94,13 +94,13 @@ def Empty_Thread(conn):
                 message[1] = msg[2]
                 message[2] = msg[3]
                 message[3] = msg[4]
-                message[4] = msg[5]
-                message[5] = msg[6]
+                message[8] = msg[5]
+                message[9] = msg[6]
             elif msg[0] == 1:
-                message[6] = msg[1]
-                message[7] = msg[2]
-                message[8] = msg[3]
-                message[9] = msg[4]
+                message[4] = msg[1]
+                message[5] = msg[2]
+                message[6] = msg[3]
+                message[7] = msg[4]
             pack.insert_byte(0x14)  # 包头
             for i in range(10):
                 pack.insert_two_bytes(pack.num_to_bytes(message[i]))
