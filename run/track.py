@@ -155,6 +155,9 @@ def main(shm_name, frame_ready, conn=None):
     last_time = time.time()
     last_imshow_time = time.time()
     current_time = time.time()
+    last_angle = 0
+    isJunction = 0
+    turning_standby = False
     frame_count = 0
     fps = 0
     cap = cv2.VideoCapture(0)
@@ -224,7 +227,18 @@ def main(shm_name, frame_ready, conn=None):
                     continue
                 # 存储有效线段
                 valid_lines.append((x1, y1, x2, y2, slope))
+        # 霍夫直线检测
         offset_x, offset_y, angle, output_image, isVertical, intersection = hl(binary)
+        # 复位isJunction状态
+        isJunction = 0
+        if abs(angle - last_angle) > 75:
+            turning_standby = True
+        if turning_standby:
+            if offset_y > 80:
+                isJunction = 1
+                turning_standby = False
+            else:
+                isJunction = 0
         if intersection is not None:
             inter_x, inter_y = intersection
         else:
@@ -240,8 +254,8 @@ def main(shm_name, frame_ready, conn=None):
             pack.insert_two_bytes(pack.num_to_bytes(inter_y))
             pack.insert_two_bytes(pack.num_to_bytes(cx))
             pack.insert_two_bytes(pack.num_to_bytes(cy))
-            pack.insert_two_bytes(pack.num_to_bytes(offset_y))
-        msg = [0, angle, offset_x, inter_x, inter_y, cx, cy, offset_y] # 0表示来自track.py的消息
+            pack.insert_two_bytes(pack.num_to_bytes(isJunction))
+        msg = [0, angle, offset_x, inter_x, inter_y, cx, cy, isJunction] # 0表示来自track.py的消息
         conn.send(msg) if conn is not None else None
         pack.send_packet() if pack is not None else None
         current_time = time.time()

@@ -51,8 +51,8 @@ def _send_thread(conn, method, socket):
             message[5] = msg[2]
             message[6] = msg[3]
             message[7] = msg[4]
-        pack.insert_byte(0x14)  # 包头
-        for i in range(10):
+        pack.insert_byte(0x16)  # 包头
+        for i in range(11):
             pack.insert_two_bytes(pack.num_to_bytes(message[i]))
         pack.send_packet() # 发送数据包
         try:
@@ -103,8 +103,8 @@ def Empty_Thread(conn):
                 message[5] = msg[2]
                 message[6] = msg[3]
                 message[7] = msg[4]
-            pack.insert_byte(0x14)  # 包头
-            for i in range(10):
+            pack.insert_byte(0x16)  # 包头
+            for i in range(11):
                 pack.insert_two_bytes(pack.num_to_bytes(message[i]))
             pack.send_packet() # 发送数据包
 
