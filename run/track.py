@@ -106,7 +106,9 @@ def hl(image):
         # 计算平均斜率与中心线在ROI底部的x坐标
         avg_slope = np.mean([l[4] for l in avg_slope_lines])
         all_x = [l[0] for l in valid_lines] + [l[2] for l in valid_lines]
+        all_y = [l[1] for l in valid_lines] + [l[3] for l in valid_lines]
         p_start_x = int(np.mean(all_x))
+        p_start_y = int(np.mean(all_y))
 
         # 计算中心线在ROI顶部的X坐标,斜率很小时认为delta_x = 0
         delta_y = height
@@ -118,6 +120,7 @@ def hl(image):
 
         # 使用p_start_x计算中心偏移
         offset_x = p_start_x - (width // 2)
+        offset_y = p_start_y - (height // 2)
 
         # 计算角度
         center_angle_rad = math.atan(avg_slope)
@@ -143,9 +146,10 @@ def hl(image):
     else:
         # 未检测到有效轨道
         offset_x = 0
+        offset_y = 0
         center_angle = 0.0
 
-    return offset_x, center_angle, output_image, isVertical, intersection
+    return offset_x, offset_y, center_angle, output_image, isVertical, intersection
 
 def main(shm_name, frame_ready, conn=None):
     last_time = time.time()
@@ -220,22 +224,24 @@ def main(shm_name, frame_ready, conn=None):
                     continue
                 # 存储有效线段
                 valid_lines.append((x1, y1, x2, y2, slope))
-        offset_x, angle, output_image, isVertical, intersection = hl(binary)
+        offset_x, offset_y, angle, output_image, isVertical, intersection = hl(binary)
         if intersection is not None:
             inter_x, inter_y = intersection
         else:
             inter_x, inter_y = 0, 0
         angle = int(angle + 180)
         offset_x = int(offset_x + 1000)
+        offset_y = int(offset_y + 1000)
         if pack is not None:
-            pack.insert_byte(0x0C)  # 包头
+            pack.insert_byte(0x0E)  # 包头
             pack.insert_two_bytes(pack.num_to_bytes(angle))
             pack.insert_two_bytes(pack.num_to_bytes(offset_x))
             pack.insert_two_bytes(pack.num_to_bytes(inter_x))
             pack.insert_two_bytes(pack.num_to_bytes(inter_y))
             pack.insert_two_bytes(pack.num_to_bytes(cx))
             pack.insert_two_bytes(pack.num_to_bytes(cy))
-        msg = [0, angle, offset_x, inter_x, inter_y, cx, cy]
+            pack.insert_two_bytes(pack.num_to_bytes(offset_y))
+        msg = [0, angle, offset_x, inter_x, inter_y, cx, cy, offset_y] # 0表示来自track.py的消息
         conn.send(msg) if conn is not None else None
         pack.send_packet() if pack is not None else None
         current_time = time.time()

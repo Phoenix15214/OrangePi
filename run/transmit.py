@@ -4,7 +4,7 @@ from threading import Thread
 import process_lib.control_lib as ctrl
 import struct
 
-message = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+message = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 server_socket = None
 isConnected = False
 pack = ctrl.SerialPacket(port="/dev/ttyUSB0", baudrate=115200, timeout=0.1)
@@ -45,6 +45,7 @@ def _send_thread(conn, method, socket):
             message[3] = msg[4] # 路口y坐标
             message[8] = msg[5] # 终点x坐标
             message[9] = msg[6] # 终点y坐标
+            message[10] = msg[7] # 是否垂直路口
         elif msg[0] == 1: # 来自detect.py的消息
             message[4] = msg[1] # 四个目标的类别ID
             message[5] = msg[2]
@@ -89,14 +90,15 @@ def Empty_Thread(conn):
     while not isConnected:
         if conn.poll(0.01):
             msg = conn.recv()
-            if msg[0] == 0:
+            if msg[0] == 0: # 来自track.py的消息
                 message[0] = msg[1]
                 message[1] = msg[2]
                 message[2] = msg[3]
                 message[3] = msg[4]
                 message[8] = msg[5]
                 message[9] = msg[6]
-            elif msg[0] == 1:
+                message[10] = msg[7]
+            elif msg[0] == 1: # 来自detect.py的消息
                 message[4] = msg[1]
                 message[5] = msg[2]
                 message[6] = msg[3]
