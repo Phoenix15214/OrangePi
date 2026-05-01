@@ -10,7 +10,7 @@ CAMERA_FPS = 120
 AVG_SLOPE_FILTER_THRESHOLD = 0.2
 MAX_CONTOUR_AREA = 750
 MIN_CONTOUR_AREA = 10
-white_frame = np.full((240, 320, 3), 255, dtype=np.uint8)
+white_frame = np.full((240, 320), 255, dtype=np.uint8)
 
 def _find_intersection(line1, line2):
     x1, y1, x2, y2, dx1, dy1, length1 = line1
@@ -189,11 +189,9 @@ def main(shm_name, frame_ready, conn=None):
         # 颜色提取
         red = lb.Color_Extraction(frame, color = lb.RED)
         black_mask = cv2.inRange(frame, (0, 0, 0), (180, 255, 45))
-        black = cv2.bitwise_and(white_frame, white_frame, mask=black_mask)
+        binary_black = cv2.bitwise_and(white_frame, white_frame, mask=black_mask)
         gray = cv2.cvtColor(red, cv2.COLOR_BGR2GRAY)
-        gray_black = cv2.cvtColor(black, cv2.COLOR_BGR2GRAY)
         binary = cv2.threshold(gray, cv2.getTrackbarPos("Threshold", "red"), 255, cv2.THRESH_BINARY_INV)[1]
-        binary_black = cv2.threshold(gray_black, 200, 255, cv2.THRESH_BINARY)[1]
         contours = cv2.findContours(binary_black, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
         valid_contours = []
         for contour in contours:
@@ -243,7 +241,7 @@ def main(shm_name, frame_ready, conn=None):
         current_time = time.time()
         if current_time - last_imshow_time >= 0.05:
             cv2.imshow("red", output_image)
-            cv2.imshow("black", binary_black)
+            # cv2.imshow("black", binary_black)
             last_imshow_time = current_time
             if cv2.waitKey(1) & 0xFF == ord('q'):
                         break

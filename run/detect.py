@@ -121,9 +121,9 @@ def main(shm_name, frame_ready, conn=None):
             if not ok: break
         
         img, scale, pad_w, pad_h = letterbox(frame, IMG_SIZE)
-
+        img = cv2.GaussianBlur(img, (5, 5), 0)
         input_tensor = np.expand_dims(cv2.cvtColor(img, cv2.COLOR_BGR2RGB), axis=0)
-        
+        # Inference
         outputs = rknn.inference(inputs=[input_tensor])
         
         boxes, scores, cls_ids = postprocess(outputs, scale, pad_w, pad_h)
@@ -158,6 +158,7 @@ def main(shm_name, frame_ready, conn=None):
         last_time = current_time
         # print(f'FPS: {fps:.2f}')
         # cv2.imshow('RK3588 YOLO', frame)
+        # cv2.imshow('IMG', img)
         # if cv2.waitKey(1) & 0xFF in (27, ord('q')): break
 
     if shm_name is not None:
